@@ -21,6 +21,7 @@
 #include "ascii_art.h"
 #include "ascii_art_base64.h"
 #include "info_payload.h"
+#include "printf.h"
 
 
 uint8_t data[32]={0};
@@ -201,10 +202,12 @@ void exti0_isr(void){
 //Обработка принятой строки
 
 void run_cmd(){
+	
 	//if(strstr(data, "WSR"))write_script_and_run_it();
 	if(strstr(data, "WSR"))run_script_gzip(info_payload);
 	//else if(strstr(data, "MOUSE")){if(mouse_move)mouse_move=0; else mouse_move=1;}
-	else if(strstr(data, "TEST"))send_word("Hello world!\n");
+	else if(strstr(data, "TEST"))send_word("Hello world!\n");//need sscanf!
+	else if(strstr(data, "PK2 "))pk2_decode_pres_key(data);
 	else if(strstr(data, "MSHIFT"))mouse_move_rand();
 	else if(strstr(data, "CATS"))send_word(cats);
 	else if(strstr(data, "SEXY"))send_word(art);
@@ -216,6 +219,13 @@ void run_cmd(){
 	//send_word("Hello world!");
 	}
 
+void pk2_decode_pres_key(char *str){
+	uint8_t key=0x04;
+	uint8_t mod=0;
+	uint8_t *pos=strstr(str, "PK2 ")+4;//на случай если у команди префикс
+	sscanf(pos, "%d %d", &key, &mod);
+	send_shortkey2(key,mod);
+	}
 //************************************************************************
 
 void send_word(char *wrd){
@@ -223,9 +233,20 @@ void send_word(char *wrd){
 		while(9 != usbd_ep_write_packet(usbd_dev, 0x81, press_key(*wrd), 9));
 		while(9 != usbd_ep_write_packet(usbd_dev, 0x81, release_key(), 9));
 	}while(*(++wrd));
-}
+	}
+
+//void send_key(char *ch){
+//	while(9 != usbd_ep_write_packet(usbd_dev, 0x81, press_key(*ch), 9));
+//	while(9 != usbd_ep_write_packet(usbd_dev, 0x81, release_key(), 9));
+//	}
+
 void send_shortkey(char key,uint8_t mod){
 	while(9 != usbd_ep_write_packet(usbd_dev, 0x81, press_key_mod(key, mod), 9));
+	while(9 != usbd_ep_write_packet(usbd_dev, 0x81, release_key(), 9));
+	}
+	
+void send_shortkey2(uint8_t key, uint8_t mod){
+	while(9 != usbd_ep_write_packet(usbd_dev, 0x81, set_key_buf(mod,key), 9));
 	while(9 != usbd_ep_write_packet(usbd_dev, 0x81, release_key(), 9));
 	}
 
@@ -314,7 +335,6 @@ int main(void)
 	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_2_MHZ,
 		GPIO_CNF_OUTPUT_PUSHPULL, GPIO12);
 	gpio_clear(GPIOA, GPIO12);
-	//for (unsigned i = 0; i < 800000; i++)__asm__("nop");
 	gpio_clear(GPIOB,GPIO12);
 	//nrf init
 	spi_nrf_init();
@@ -331,11 +351,6 @@ int main(void)
 	//nvic_enable_irq(NVIC_USB_WAKEUP_IRQ);
 	//таймер
 	for(uint32_t i=0;i<0xffffff;i++)__asm__("nop");
-//	systick_init();
-	
-	//send_word("Shaman is the best");
-	//write_script_and_run_it();
-	char test[10]={0};
 	while (1){
 		gpio_toggle(GPIOB,GPIO12);
 		if(cmd_rcv){

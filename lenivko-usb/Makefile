@@ -3,7 +3,7 @@ BUILD_DIR = bin
 
 SHARED_DIR = ./inc
 
-CFILES =  nrf24.c hid.c  keycodes.c  main.c
+CFILES =  nrf24.c hid.c  keycodes.c  main.c printf.c
 
 OPT_FLAGS ?= -O2
 CFLAGS += -Wall $(OPT_FLAGS) -std=gnu99 -MD -I.

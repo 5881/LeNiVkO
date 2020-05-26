@@ -118,13 +118,13 @@ uint8_t nrf_send(uint8_t *data,uint8_t len){
 	uint8_t fifo;
 	NRF_CE_LO();
 	nrf_flushtx();
-	nrf_wreg(CONFIG,0x0e); //потом исправить на установку биты
+	nrf_wreg(CONFIG,0x0e); //потом исправить на установку бит
 	delay_us(25);
 	nrf_write_bufer(WR_TX_PLOAD,data,len);
 	NRF_CE_HI();
 	delay_us(50);
 	NRF_CE_LO();
-	//Это ужно чтобы строка не осталась в буфере, а была точно отправлена
+	//Это нужно чтобы строка не осталась в буфере, а была точно отправлена
 	while(!(nrf_rreg(FIFO_STATUS)&TX_EMPTY)){
 		NRF_CE_HI();
 		delay_us(25);

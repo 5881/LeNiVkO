@@ -156,6 +156,7 @@ static void usart1_setup(void){
  
 
 void usart1_isr(void){
+	//if(sleep_mode)wake();
 	static uint8_t cnt=0;
 	char ch;
 	ch=usart_recv_blocking(USART1);
@@ -233,9 +234,9 @@ uint8_t pcf_read(void){
 void key_proc(uint8_t *key){
 
 /*keyboard layout
- * 0xfe 0x7f
- * 0xfd 0xbf
- * 0xfb 0xdf
+ * 0xfe 0x7f          0xFE  0xf7  0xEF
+ * 0xfd 0xbf            0xFB    0xBF
+ * 0xfb 0xdf          0xFD  0x7F  0xDF
  * 0xf7 0xef
  */
 	
@@ -246,20 +247,26 @@ void key_proc(uint8_t *key){
 		case 0xfe:
 			nrf_send("BIRD",4);
 			break;
+		case 0xf7:
+			nrf_send("PK2 82 0", 8); //key_up
+			break;
 		case 0x7f:
-			nrf_send("WSR",3);
+			nrf_send("PK2 81 0", 8); //key_down
 			break;
 		case 0xfd:
-			nrf_send("CATS",4);
+			nrf_send("WSR",3);
 			break;
 		case 0xbf:
-			nrf_send("GIRL",4);
+			nrf_send("PK2 44 0", 8); //spase
 			break;
 		case 0xfb:
-			nrf_send("SEXY",4);
+			nrf_send("PK2 42 0", 8); //back spase
 			break;
 		case 0xdf:
 			nrf_send("MSHIFT",6);
+			break;
+		case 0xef:
+			nrf_send("GIRL",4);
 			break;
 		}
 	*key=0xff;
